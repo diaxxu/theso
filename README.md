@@ -1,5 +1,5 @@
 # THESO-GCS
-### Ground Control System — KAELOS Aerospace
+### Ground Control System 
 
 Military-grade UAV ground control system with EO/IR gimbal slaving,
 auto-tracking, GPS targeting, and guided strike mode.
@@ -167,5 +167,5 @@ theso-ground-station/
 ---
 
 ## BUILT BY
-KAELOS Aerospace — EO/IR Systems Division  
+EO/IR Systems
 Ground Control Software v1.0
