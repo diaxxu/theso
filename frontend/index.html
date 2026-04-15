@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>THESO-GCS // GROUND CONTROL SYSTEM</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div id="topbar">
+    <div class="tb-left">
+        <span class="sys-id">THESO-GCS v1.0</span>
+        <span class="separator">|</span>
+        <span id="conn-status" class="status-badge DISC">DISCONNECTED</span>
+        <span class="separator">|</span>
+        <span id="sys-clock">--:--:--Z</span>
+    </div>
+    <div class="tb-center">
+        <span id="ac-callsign">AC: ------</span>
+        <span class="separator">|</span>
+        <span id="ac-mode-display">MODE: UNKNOWN</span>
+        <span class="separator">|</span>
+        <span id="ac-armed">ARMED: --</span>
+    </div>
+    <div class="tb-right">
+        <span id="gps-fix">GPS: NO FIX</span>
+        <span class="separator">|</span>
+        <span id="sat-count">SAT: --</span>
+        <span class="separator">|</span>
+        <span id="link-quality">LINK: --%</span>
+    </div>
+</div>
+
+<!-- MAIN LAYOUT -->
+<div id="main-grid">
+
+    <!-- LEFT PANEL: TELEMETRY -->
+    <div id="left-panel" class="panel">
+        <div class="panel-header">TELEMETRY</div>
+
+        <div class="telem-block">
+            <div class="telem-label">ALTITUDE (m)</div>
+            <div class="telem-value" id="t-alt">---.-</div>
+        </div>
+        <div class="telem-block">
+            <div class="telem-label">GROUNDSPEED (m/s)</div>
+            <div class="telem-value" id="t-spd">--.-</div>
+        </div>
+        <div class="telem-block">
+            <div class="telem-label">AIRSPEED (m/s)</div>
+            <div class="telem-value" id="t-aspd">--.-</div>
+        </div>
+        <div class="telem-block">
+            <div class="telem-label">HEADING (deg)</div>
+            <div class="telem-value" id="t-hdg">---</div>
+        </div>
+        <div class="telem-block">
+            <div class="telem-label">PITCH (deg)</div>
+            <div class="telem-value" id="t-pitch">--.-</div>
+        </div>
+        <div class="telem-block">
+            <div class="telem-label">ROLL (deg)</div>
+            <div class="telem-value" id="t-roll">--.-</div>
+        </div>
+        <div class="telem-block">
+            <div class="telem-label">BATTERY (V)</div>
+            <div class="telem-value" id="t-batt">--.-</div>
+        </div>
+        <div class="telem-block">
+            <div class="telem-label">BATT REMAIN (%)</div>
+            <div class="telem-value" id="t-batt-pct">--</div>
+        </div>
+        <div class="telem-block">
+            <div class="telem-label">THROTTLE (%)</div>
+            <div class="telem-value" id="t-thr">--</div>
+        </div>
+        <div class="telem-block">
+            <div class="telem-label">LAT</div>
+            <div class="telem-value sm" id="t-lat">--.------</div>
+        </div>
+        <div class="telem-block">
+            <div class="telem-label">LON</div>
+            <div class="telem-value sm" id="t-lon">---.------</div>
+        </div>
+
+        <div class="panel-header" style="margin-top:12px;">GIMBAL</div>
+        <div class="telem-block">
+            <div class="telem-label">PAN (deg)</div>
+            <div class="telem-value" id="g-pan">--.-</div>
+        </div>
+        <div class="telem-block">
+            <div class="telem-label">TILT (deg)</div>
+            <div class="telem-value" id="g-tilt">--.-</div>
+        </div>
+        <div class="telem-block">
+            <div class="telem-label">GIMBAL MODE</div>
+            <div class="telem-value sm" id="g-mode">FREE</div>
+        </div>
+
+        <div class="panel-header" style="margin-top:12px;">CONNECT</div>
+        <div class="connect-row">
+            <input type="text" id="conn-host" placeholder="127.0.0.1" value="127.0.0.1"/>
+            <input type="text" id="conn-port" placeholder="8765" value="8765"/>
+        </div>
+        <button class="cmd-btn full" id="btn-connect" onclick="toggleConnect()">CONNECT</button>
+    </div>
+
+    <!-- CENTER PANEL: VIDEO + CONTROLS -->
+    <div id="center-panel">
+
+        <!-- VIDEO FEED -->
+        <div id="video-container">
+            <canvas id="video-canvas"></canvas>
+
+            <!-- HUD OVERLAYS -->
+            <div id="hud-top-left">
+                <div id="hud-mode">MODE: FREE</div>
+                <div id="hud-track-status">TRACK: OFF</div>
+            </div>
+            <div id="hud-top-right">
+                <div id="hud-time">--:--:--Z</div>
+                <div id="hud-rec" class="blink-slow">-- REC</div>
+            </div>
+            <div id="hud-bottom-left">
+                <div id="hud-alt">ALT: ---m</div>
+                <div id="hud-spd">SPD: --m/s</div>
+            </div>
+            <div id="hud-bottom-right">
+                <div id="hud-hdg">HDG: ---</div>
+                <div id="hud-batt">BAT: --%</div>
+            </div>
+
+            <!-- CROSSHAIR -->
+            <div id="crosshair">
+                <div class="ch-h"></div>
+                <div class="ch-v"></div>
+                <div class="ch-circle"></div>
+                <div id="track-box" style="display:none;"></div>
+            </div>
+
+            <!-- VIDEO OVERLAY TEXT -->
+            <div id="video-offline">
+                <span>NO VIDEO SIGNAL</span>
+                <span class="sub">THESO-GCS // AWAITING FEED</span>
+            </div>
+        </div>
+
+        <!-- MODE BAR -->
+        <div id="mode-bar">
+            <div class="mode-group-label">GIMBAL MODE</div>
+            <button class="mode-btn active" id="mBtn-free"    onclick="setMode('FREE')">FREE</button>
+            <button class="mode-btn"        id="mBtn-track"   onclick="setMode('TRACK')">AUTO-TRACK</button>
+            <button class="mode-btn"        id="mBtn-slave"   onclick="setMode('GPS_SLAVE')">GPS SLAVE</button>
+            <button class="mode-btn strike" id="mBtn-strike"  onclick="setMode('STRIKE')">STRIKE</button>
+
+            <div class="sep-v"></div>
+
+            <div class="mode-group-label">FLIGHT MODE</div>
+            <button class="cmd-btn" onclick="sendFlightMode('GUIDED')">GUIDED</button>
+            <button class="cmd-btn" onclick="sendFlightMode('AUTO')">AUTO</button>
+            <button class="cmd-btn" onclick="sendFlightMode('LOITER')">LOITER</button>
+            <button class="cmd-btn" onclick="sendFlightMode('RTL')">RTL</button>
+            <button class="cmd-btn arm-btn" onclick="sendArm()">ARM</button>
+            <button class="cmd-btn disarm-btn" onclick="sendDisarm()">DISARM</button>
+        </div>
+
+        <!-- COMMAND INPUT ROW -->
+        <div id="cmd-row">
+            <div class="cmd-group">
+                <label>HDG</label>
+                <input type="number" id="cmd-hdg" placeholder="0-360" min="0" max="360"/>
+                <button class="cmd-btn" onclick="sendHeading()">SET</button>
+            </div>
+            <div class="cmd-group">
+                <label>ALT (m)</label>
+                <input type="number" id="cmd-alt" placeholder="meters"/>
+                <button class="cmd-btn" onclick="sendAltitude()">SET</button>
+            </div>
+            <div class="cmd-group">
+                <label>SPD (m/s)</label>
+                <input type="number" id="cmd-spd" placeholder="m/s"/>
+                <button class="cmd-btn" onclick="sendSpeed()">SET</button>
+            </div>
+            <div class="cmd-group">
+                <label>GIMBAL PAN</label>
+                <input type="number" id="cmd-pan" placeholder="-180 to 180"/>
+                <button class="cmd-btn" onclick="sendGimbalDirect()">SET</button>
+            </div>
+            <div class="cmd-group">
+                <label>GIMBAL TILT</label>
+                <input type="number" id="cmd-tilt" placeholder="-90 to 0"/>
+            </div>
+        </div>
+
+        <!-- MESSAGE LOG -->
+        <div id="msg-log">
+            <div class="panel-header">SYSTEM LOG</div>
+            <div id="msg-list"></div>
+        </div>
+    </div>
+
+    <!-- RIGHT PANEL: MAP -->
+    <div id="right-panel" class="panel">
+        <div class="panel-header">
+            MAP
+            <span id="map-mode-label" style="float:right;font-size:10px;color:#4a7a4a;">CLICK: WAYPOINT</span>
+        </div>
+        <div id="map"></div>
+
+        <div class="panel-header" style="margin-top:8px;">WAYPOINTS</div>
+        <div id="wp-list"></div>
+        <div class="connect-row" style="margin-top:6px;">
+            <button class="cmd-btn full" onclick="clearWaypoints()">CLEAR WP</button>
+            <button class="cmd-btn full" onclick="sendMission()">UPLOAD MISSION</button>
+        </div>
+
+        <div class="panel-header" style="margin-top:8px;">TARGET</div>
+        <div class="telem-block">
+            <div class="telem-label">TARGET LAT</div>
+            <div class="telem-value sm" id="tgt-lat">--</div>
+        </div>
+        <div class="telem-block">
+            <div class="telem-label">TARGET LON</div>
+            <div class="telem-value sm" id="tgt-lon">--</div>
+        </div>
+        <div class="telem-block">
+            <div class="telem-label">TARGET DIST (m)</div>
+            <div class="telem-value" id="tgt-dist">--</div>
+        </div>
+        <button class="cmd-btn full strike" id="btn-strike-confirm" onclick="confirmStrike()" style="display:none;">CONFIRM STRIKE</button>
+    </div>
+
+</div>
+
+<!-- BOTTOM BAR -->
+<div id="bottombar">
+    <span>THESO-GCS // KAELOS AEROSPACE</span>
+    <span class="separator">|</span>
+    <span id="bb-fps">VIDEO: -- FPS</span>
+    <span class="separator">|</span>
+    <span id="bb-latency">LATENCY: -- ms</span>
+    <span class="separator">|</span>
+    <span id="bb-packets">PKT RX: --</span>
+    <span class="separator">|</span>
+    <span id="bb-wp-count">WP: 0</span>
+</div>
+
+<script src="js/app.js"></script>
+<script src="js/map.js"></script>
+<script src="js/gimbal.js"></script>
+<script src="js/video.js"></script>
+<script src="js/modes.js"></script>
+</body>
+</html>

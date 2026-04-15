@@ -1,0 +1,5 @@
+websockets>=12.0
+pymavlink>=2.4.40
+# Optional - enable YOLOv8 tracker
+# ultralytics>=8.0.0
+# opencv-python>=4.8.0
